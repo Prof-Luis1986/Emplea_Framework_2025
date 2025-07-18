@@ -1,21 +1,50 @@
 import flet as ft
 import requests
 import json
-import os
+import pyttsx3
 import platform
+import os
 
+# Detecta el sistema operativo
+SO = platform.system()
+
+if SO == "Darwin":  # Mac
+    PERSONAJE = "Albert Einstein"
+    EMOJI_PERSONAJE = "🧑‍🔬"
+    VOZ = "Juan"  # O la voz masculina que prefieras en Mac
+elif SO == "Windows":
+    PERSONAJE = "Marie Curie"
+    EMOJI_PERSONAJE = "👩‍🔬"
+    VOZ = "Sabina"  # O "Zira", según prefieras
+else:
+    PERSONAJE = "Personaje"
+    EMOJI_PERSONAJE = "🧑‍🔬"
+    VOZ = None  # O una voz por defecto
+
+EMOJI_USUARIO = "🧑‍💻"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "mistral:7b"
-PERSONAJE = "Albert Einstein"
-EMOJI_PERSONAJE = "🧑‍🔬"
-EMOJI_USUARIO = "🧑‍💻"
 
-VOZ_MAC = 'Juan'  # <-- Aquí el nombre exacto de la voz
-
-def hablar_mac(texto, voz=VOZ_MAC):
-    if platform.system() == "Darwin":
+def hablar(texto, voz=VOZ):
+    if SO == "Darwin":
+        # Mac: usa 'say'
         texto_limpio = texto.replace("*", "").replace("_", "").replace("#", "")
         os.system(f'say -v "{voz}" "{texto_limpio}"')
+    elif SO == "Windows":
+        # Windows: usa pyttsx3
+        try:
+            engine = pyttsx3.init()
+            for v in engine.getProperty('voices'):
+                if voz.lower() in v.name.lower():
+                    engine.setProperty('voice', v.id)
+                    break
+            engine.setProperty('rate', 160)
+            engine.setProperty('volume', 0.9)
+            texto_limpio = texto.replace("*", "").replace("_", "").replace("#", "")
+            engine.say(texto_limpio)
+            engine.runAndWait()
+        except Exception as e:
+            print(f"Error en TTS: {e}")
 
 def main(page: ft.Page):
     page.title = f"Chat con {PERSONAJE}"
@@ -117,18 +146,18 @@ def main(page: ft.Page):
         mensajes.controls.append(burbuja(respuesta, es_usuario=False))
         page.update()
 
-        # Leer la respuesta en voz alta si está activado y es Mac
-        if voz_activada.value and platform.system() == "Darwin":
+        # Leer la respuesta en voz alta si está activado
+        if voz_activada.value and VOZ:
             try:
-                hablar_mac(respuesta, voz=VOZ_MAC)
+                hablar(respuesta, voz=VOZ)
             except Exception as ex:
                 print(f"Error en text-to-speech: {ex}")
 
     prompt.on_submit = enviar_click
 
     def probar_voz(e):
-        if platform.system() == "Darwin":
-            hablar_mac(f"Hola, soy {PERSONAJE}. Esta es mi voz.", voz=VOZ_MAC)
+        if VOZ:
+            hablar(f"Hola, soy {PERSONAJE}. Esta es mi voz.", voz=VOZ)
 
     header = ft.Container(
         content=ft.Row([
