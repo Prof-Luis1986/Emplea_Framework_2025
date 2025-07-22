@@ -66,7 +66,7 @@ def main(page: ft.Page):
     lblIMC = ft.Text("Tu IMC es de: ")
 
     # Agrego una imagen (reemplaza la ruta con la correcta)
-    img = ft.Image(src="/Users/luismartinezalfaro/Desktop/Ejercicios_Flet/app06_IMC/IMC_app/Bascula.png",
+    img = ft.Image(src="bascula.png",
                    width=200,
                    height=200,
                    fit=ft.ImageFit.CONTAIN)
